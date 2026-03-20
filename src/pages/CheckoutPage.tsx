@@ -30,6 +30,9 @@ const CheckoutPage = () => {
   const [shipping, setShipping] = useState<"free" | "standard" | "express">("free");
   const [cepLoading, setCepLoading] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
+  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
+
+  const emailDomains = ["@gmail.com", "@outlook.com", "@hotmail.com", "@yahoo.com", "@icloud.com", "@uol.com.br", "@terra.com.br"];
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", cpf: "",
@@ -161,7 +164,6 @@ const CheckoutPage = () => {
 
     // Encode and redirect to PIX page
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    clearCart();
     navigate(`/pix?data=${encoded}`);
   };
 
@@ -224,12 +226,52 @@ const CheckoutPage = () => {
                       <input name="name" value={form.name} onChange={handleChange} placeholder="Seu nome completo" className={inputClass} />
                     </div>
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="text-[11px] text-muted-foreground mb-1 block">E-mail</label>
                     <div className={fieldClass}>
                       <Mail className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
-                      <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" className={inputClass} />
+                      <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => {
+                          handleChange(e);
+                          const val = e.target.value;
+                          if (val.includes("@")) {
+                            const [user, domain] = val.split("@");
+                            if (user && domain !== undefined) {
+                              const filtered = emailDomains.filter((d) => d.startsWith("@" + domain) && d !== "@" + domain);
+                              setEmailSuggestions(filtered.map((d) => user + d));
+                            } else {
+                              setEmailSuggestions([]);
+                            }
+                          } else if (val.length > 0) {
+                            setEmailSuggestions(emailDomains.map((d) => val + d));
+                          } else {
+                            setEmailSuggestions([]);
+                          }
+                        }}
+                        onBlur={() => setTimeout(() => setEmailSuggestions([]), 150)}
+                        placeholder="seu@email.com"
+                        className={inputClass}
+                        autoComplete="off"
+                      />
                     </div>
+                    {emailSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                        {emailSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setForm((prev) => ({ ...prev, email: s })); setEmailSuggestions([]); }}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="text-[11px] text-muted-foreground mb-1 block">Telefone</label>

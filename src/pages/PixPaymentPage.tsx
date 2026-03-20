@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowLeft, Lock, Copy, Check, Clock, CheckCircle, Shield, Package, Truck, MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 const formatPrice = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -34,6 +35,7 @@ interface DisplayData {
 const PixPaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { clearCart } = useCart();
 
   const [loading, setLoading] = useState(true);
   const [pixCode, setPixCode] = useState("");
@@ -109,6 +111,7 @@ const PixPaymentPage = () => {
         const result = await res.json();
         if (result.status === "COMPLETED") {
           setStatus("COMPLETED");
+          clearCart();
           if (pollingRef.current) clearInterval(pollingRef.current);
         }
       } catch (e) {
