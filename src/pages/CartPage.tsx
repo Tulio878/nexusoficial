@@ -25,8 +25,8 @@ const CartPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Suggestions: 1 capacete + 3 acessórios fixos
-  const suggestionIds = [201, 202, 203, 204]; // 1 capacete LS2 + Fone + Viseira Camaleão + Viseira Fumê
+  // Order bumps: acessórios complementares
+  const suggestionIds = [50, 83, 51, 54]; // Fone Bluetooth + Viseira Camaleão + Viseira Fumê + Luva Norisk
   const cartIds = new Set(items.map((i) => i.product.id));
   const suggestions = suggestionIds
     .filter((id) => !cartIds.has(id))

@@ -28,6 +28,8 @@ const CheckoutPage = () => {
   const { items, addItem, updateQuantity, removeItem, totalPrice, totalItems, clearCart } = useCart();
   const navigate = useNavigate();
   const [shipping, setShipping] = useState<"free" | "standard" | "express">("free");
+  const [cepLoading, setCepLoading] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", cpf: "",
@@ -50,12 +52,44 @@ const CheckoutPage = () => {
     return d.replace(/(\d{5})(\d)/, "$1-$2");
   };
 
+  // ViaCEP auto-fill
+  const fetchCep = async (cep: string) => {
+    const digits = cep.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        address: data.logradouro || prev.address,
+        neighborhood: data.bairro || prev.neighborhood,
+        city: data.localidade || prev.city,
+        state: data.uf || prev.state,
+        complement: data.complemento || prev.complement,
+      }));
+    } catch {
+      toast.error("Erro ao buscar CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let masked = value;
     if (name === "cpf") masked = maskCPF(value);
     else if (name === "phone") masked = maskPhone(value);
-    else if (name === "cep") masked = maskCEP(value);
+    else if (name === "cep") {
+      masked = maskCEP(value);
+      // Auto-fetch when 8 digits entered
+      const digits = value.replace(/\D/g, "");
+      if (digits.length === 8) fetchCep(digits);
+    }
     setForm((prev) => ({ ...prev, [name]: masked }));
   };
 
@@ -65,7 +99,7 @@ const CheckoutPage = () => {
   const finalTotal = totalPrice + shippingCost;
 
   const cartIds = new Set(items.map((i) => i.product.id));
-  const suggestionIds = [201, 202, 203, 204];
+  const suggestionIds = [50, 83, 51, 54];
   const suggestions = suggestionIds
     .filter((id) => !cartIds.has(id))
     .map((id) => products.find((p) => p.id === id)!)
@@ -236,13 +270,44 @@ const CheckoutPage = () => {
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <input name="cep" value={form.cep} onChange={handleChange} placeholder="CEP" className="border border-border rounded-lg px-3 py-2.5 text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/30 transition-colors" />
+                    <div className="relative">
+                      <input name="cep" value={form.cep} onChange={handleChange} placeholder="CEP" maxLength={9} className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/30 transition-colors" />
+                      {cepLoading && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
                     <input name="city" value={form.city} onChange={handleChange} placeholder="Cidade" className="border border-border rounded-lg px-3 py-2.5 text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/30 transition-colors" />
                   </div>
-                  <select name="state" value={form.state} onChange={handleChange} className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:border-foreground/30 transition-colors appearance-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}>
-                    <option value="">Estado</option>
-                    {estados.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
-                  </select>
+                  {/* Custom state selector */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setStateOpen(!stateOpen)}
+                      className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:border-foreground/30 transition-colors text-left flex items-center justify-between"
+                    >
+                      <span className={form.state ? "text-foreground" : "text-muted-foreground/50"}>{form.state || "Estado"}</span>
+                      <svg className={`w-4 h-4 text-muted-foreground transition-transform ${stateOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    {stateOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setStateOpen(false)} />
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                          {estados.map((uf) => (
+                            <button
+                              key={uf}
+                              type="button"
+                              onClick={() => { setForm((prev) => ({ ...prev, state: uf })); setStateOpen(false); }}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${form.state === uf ? "bg-secondary font-bold" : ""}`}
+                            >
+                              {uf}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-3">
                     <input name="address" value={form.address} onChange={handleChange} placeholder="Rua, Avenida, etc." className="col-span-2 border border-border rounded-lg px-3 py-2.5 text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/30 transition-colors" />
                     <input name="number" value={form.number} onChange={handleChange} placeholder="Nº" className="border border-border rounded-lg px-3 py-2.5 text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/30 transition-colors" />
