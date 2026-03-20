@@ -5,8 +5,9 @@ const Toaster = () => {
     <Sonner
       theme="light"
       position="bottom-right"
-      duration={1500}
-      visibleToasts={1}
+      duration={2000}
+      visibleToasts={3}
+      style={{ zIndex: 99999 }}
       toastOptions={{
         classNames: {
           toast:

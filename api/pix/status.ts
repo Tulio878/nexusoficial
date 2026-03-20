@@ -1,5 +1,6 @@
 export const config = {
   runtime: "edge",
+  regions: ["gru1"],
 };
 
 export default async function handler(req: Request) {
@@ -21,9 +22,13 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const DUTTYFY_URL =
-      process.env.DUTTYFY_PIX_URL_ENCRYPTED ||
-      "https://www.pagamentos-seguros.app/api-pix/gh95YVcsVRPx_fLllqowP201WFl-x8fXSBybaKG9K9m_fxBwNwuBRLsevdJb68q-_4pe8cz14aPSoNJJVAVNRA";
+    const DUTTYFY_URL = process.env.DUTTYFY_PIX_URL_ENCRYPTED;
+    if (!DUTTYFY_URL) {
+      return new Response(
+        JSON.stringify({ error: "DUTTYFY_PIX_URL_ENCRYPTED is not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const url = new URL(req.url);
     const transactionId = url.searchParams.get("transactionId");
