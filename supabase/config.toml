@@ -1,0 +1,7 @@
+project_id = "bgxzgbrrdtzhjukzdxyj"
+
+[functions.create-pix-charge]
+verify_jwt = false
+
+[functions.pix-status]
+verify_jwt = false
