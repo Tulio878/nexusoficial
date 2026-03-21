@@ -453,7 +453,7 @@ const CheckoutPage = () => {
                   {([
                     { key: "free" as const, label: "Frete Grátis", sub: "7 a 12 dias úteis", price: "Grátis", priceClass: "text-success font-bold", badge: null },
                     { key: "standard" as const, label: "Frete Padrão", sub: "5 a 8 dias úteis", price: "R$ 14,90", priceClass: "text-foreground", badge: null },
-                    { key: "express" as const, label: "Frete Grátis", sub: "2 a 4 dias úteis", price: "R$ 24,90", priceClass: "text-foreground", badge: "RECOMENDADO" },
+                    { key: "express" as const, label: "Frete Sedex", sub: "2 a 4 dias úteis", price: "R$ 24,90", priceClass: "text-foreground", badge: "RECOMENDADO" },
                   ]).map((opt) => (
                     <label
                       key={opt.key}
