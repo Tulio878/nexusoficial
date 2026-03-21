@@ -127,13 +127,16 @@ const CheckoutPage = () => {
 
     // Build PIX charge payload
     const amountInCents = Math.round(finalTotal * 100);
+    const cleanPhone = form.phone.replace(/\D/g, "");
+    const cleanDoc = form.cpf.replace(/\D/g, "");
+
     const payload = {
       amount: amountInCents,
       customer: {
         name: form.name,
         email: form.email,
-        phone: form.phone,
-        document: form.cpf,
+        phone: cleanPhone,
+        document: cleanDoc,
       },
       item: {
         title: `Pedido NEXUS - ${totalItems} item(s)`,

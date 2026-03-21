@@ -70,30 +70,49 @@ const PixPaymentPage = () => {
     }
     setAmount(parsed.amount);
 
-    const createCharge = async () => {
-      try {
-        // Remove display data before sending to API
-        const { _display, ...chargeData } = parsed;
-        const response = await fetch("/api/pix/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(chargeData),
-        });
+    const createCharge = async (retries = 3) => {
+      const { _display, ...chargeData } = parsed;
 
-        const result = await response.json();
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const response = await fetch("/api/pix/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(chargeData),
+          });
 
-        if (!response.ok || result?.error) {
-          throw new Error(result?.error || "Erro ao criar cobrança");
+          const result = await response.json();
+
+          if (response.ok && result.pixCode && result.transactionId) {
+            setPixCode(result.pixCode);
+            setTransactionId(result.transactionId);
+            setLoading(false);
+            return; // success
+          }
+
+          // 4xx = validation error, don't retry
+          if (response.status >= 400 && response.status < 500) {
+            toast.error(result?.error || "Dados inválidos. Verifique e tente novamente.");
+            navigate("/checkout");
+            return;
+          }
+
+          // 5xx or missing fields = retry
+          console.warn(`[PIX] Attempt ${attempt}/${retries} failed: ${response.status}`);
+          if (attempt < retries) {
+            await new Promise((r) => setTimeout(r, attempt * 1500));
+          }
+        } catch (e: any) {
+          console.warn(`[PIX] Attempt ${attempt}/${retries} network error: ${e.message}`);
+          if (attempt < retries) {
+            await new Promise((r) => setTimeout(r, attempt * 1500));
+          }
         }
-
-        setPixCode(result.pixCode);
-        setTransactionId(result.transactionId);
-        setLoading(false);
-      } catch (e: any) {
-        console.error("Error creating charge:", e);
-        toast.error(e.message || "Erro ao criar cobrança PIX");
-        navigate("/checkout");
       }
+
+      // All retries failed — stay on page and let user retry
+      toast.error("Erro ao gerar PIX. Tentando novamente...");
+      setTimeout(() => createCharge(2), 3000);
     };
 
     createCharge();
