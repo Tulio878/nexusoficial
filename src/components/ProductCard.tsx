@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Truck, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import type { Product } from "@/data/products";
 
 const formatPrice = (v: number) =>

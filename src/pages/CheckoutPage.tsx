@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock, User, Mail, Phone, FileText, MapPin, Truck, Shield, ShieldCheck, Package } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { products } from "@/data/products";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 
 const formatPrice = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

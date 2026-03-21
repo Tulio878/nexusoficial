@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { getProductById, getProductsByCategory, getCategoryLabel, products } from "@/data/products";

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowLeft, Lock, Copy, Check, Clock, CheckCircle, Shield, Package, Truck, MapPin, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { useCart } from "@/contexts/CartContext";
 
 const formatPrice = (v: number) =>
